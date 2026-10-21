@@ -8,6 +8,8 @@ import com.atv.models.views.*;
 
 public class Game {
 
+    public static final int VICTORY_SURVIVOR_COUNT = 8;
+
     private Stack<Card> playerDeck = new Stack<>();
     private Stack<Card> zombieDeck = new Stack<>();
     private Stack<Card> explorationDeck = new Stack<>();
@@ -27,8 +29,25 @@ public class Game {
     private boolean armsDamaged = false;
     private boolean legsDamaged = false;
     private boolean isGameOver = false;
+    private boolean isGameWon = false;
 
     public void init(Character character) {
+        this.playerArea.clear();
+        this.zombieArea.clear();
+        this.explorationArea.clear();
+        this.playerDiscard.clear();
+        this.playerHand.clear();
+        this.cardsDestroyed.clear();
+        this.wave = 1;
+        this.survivorsRescued = 0;
+        this.defends = 0;
+        this.canRetrieveMedicalEquipment = false;
+        this.isRifleInPlay = false;
+        this.armsDamaged = false;
+        this.legsDamaged = false;
+        this.isGameOver = false;
+        this.isGameWon = false;
+
         CardFactory cardFactory = CardFactory.getInstance();
         cardFactory.createExplorationDeck();
         cardFactory.createZombieDeck();
@@ -71,6 +90,9 @@ public class Game {
             return;
         }
         Card card = this.playerInteraction.selectCard(this.playerHand);
+        if (card == null) {
+            return;
+        }
         if (card instanceof EventCard) {
             if (isLegsDamaged() && card.getName().equals("Run")) {
                 this.playerInteraction.showMessage("No puedes jugar la carta Run.");
@@ -107,6 +129,9 @@ public class Game {
             return;
         }
         Card card = this.playerInteraction.selectCard(this.explorationArea);
+        if (card == null) {
+            return;
+        }
         if (discard(card.getExplorationCost())) {
             this.explorationArea.remove(card);
             this.playerDiscard.add(card);
@@ -116,6 +141,9 @@ public class Game {
 
     public void prepareCard() {
         Card card = this.playerInteraction.selectCard(this.playerArea);
+        if (!(card instanceof PermanentCard)) {
+            return;
+        }
         if (((PermanentCard) card).isPrepared()) {
             this.playerInteraction.showMessage("La carta ya está preparada.");
             return;
@@ -212,10 +240,11 @@ public class Game {
         }
         for (int i = 0; i < quantity; i++) {
             Card card = this.playerInteraction.selectCard(this.playerHand);
-            if (card != null) {
-                this.playerHand.remove(card);
-                this.playerDiscard.add(card);
+            if (card == null) {
+                return false;
             }
+            this.playerHand.remove(card);
+            this.playerDiscard.add(card);
         }
         return true;
     }
@@ -284,6 +313,9 @@ public class Game {
 
     public void incrementSurvivorsRescued(int value) {
         this.survivorsRescued += value;
+        if (this.survivorsRescued >= VICTORY_SURVIVOR_COUNT) {
+            this.isGameWon = true;
+        }
     }
 
     public Stack<Card> getPlayerDeck() {
@@ -435,6 +467,10 @@ public class Game {
 
     public void setGameOver(boolean gameOver) {
         isGameOver = gameOver;
+    }
+
+    public boolean isGameWon() {
+        return isGameWon;
     }
 
     public void setPlayerInteraction(PlayerInteraction playerInteraction) {

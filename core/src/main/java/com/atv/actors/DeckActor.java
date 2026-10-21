@@ -3,6 +3,7 @@ package com.atv.actors;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 
 public class DeckActor extends Actor {
 
@@ -12,6 +13,6 @@ public class DeckActor extends Actor {
 
     public DeckActor(String path) {
         texture = new Texture(path);
-        numberOfCards = new Texture();
+        numberOfCards = new Label("20", new Skin());
     }
 }
