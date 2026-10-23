@@ -32,9 +32,7 @@ public class PermanentCard extends Card{
       if (this.prepareAction != null) {
          this.prepareAction.execute(game, this);
       } else {
-         if (game.discard(this.prepareCost)) {
-            this.prepared = true;
-         }
+         game.discard(this.prepareCost, () -> this.prepared = true);
       }
 
    }

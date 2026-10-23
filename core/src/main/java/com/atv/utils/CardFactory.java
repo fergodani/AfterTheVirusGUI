@@ -41,11 +41,10 @@ public class CardFactory {
             }
         });
         permanentCard.setPrepareAction((game, card) -> {
-            if (game.discard(((PermanentCard) card).getPrepareCost())) {
+            game.discard(((PermanentCard) card).getPrepareCost(), () -> {
                 if (checkVehiclePrepared(game, (PermanentCard) card)) return;
                 ((PermanentCard) card).setPrepared(true);
-            }
-
+            });
         });
         explorationDeck.add(permanentCard);
 
@@ -54,18 +53,23 @@ public class CardFactory {
             game.getPlayerArea().remove(self);
             game.getPlayerDiscard().add(self); // Descartar la propia carta
             Card cardSelected = game.getPlayerInteraction().selectCard(game.getZombieArea());
+            if (cardSelected == null) {
+                return;
+            }
             game.getZombieArea().remove(cardSelected);
             game.getPlayerDiscard().add(cardSelected);
         });
         permanentCard.setPrepareAction(((game, card) -> {
-            if (game.discard(((PermanentCard) card).getPrepareCost())) {
+            game.discard(((PermanentCard) card).getPrepareCost(), () -> {
                 if (checkVehiclePrepared(game, (PermanentCard) card)) return;
                 Card cardSelected = game.getPlayerInteraction().selectCard(game.getZombieArea());
+                if (cardSelected == null) {
+                    return;
+                }
                 game.getZombieArea().remove(cardSelected);
                 game.getPlayerDiscard().add(cardSelected);
                 ((PermanentCard) card).setPrepared(true);
-            }
-
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -82,14 +86,14 @@ public class CardFactory {
             }
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Trapper Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -107,14 +111,14 @@ public class CardFactory {
             game.kill(preparedPerson);
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Trapper Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -149,14 +153,14 @@ public class CardFactory {
             game.kill(2);
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Trapper Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -218,14 +222,14 @@ public class CardFactory {
             }
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Trapper Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -251,10 +255,10 @@ public class CardFactory {
         permanentCard = new PermanentCard("Lab", 2, 1, "Facility", (game, self) -> {
         });
         permanentCard.setPrepareAction(((game, card) -> {
-            if (game.discard("Safe House")) {
+            game.discard("Safe House", () -> {
                 game.setCanRetrieveMedicalEquipment(true);
                 ((PermanentCard) card).setPrepared(true);
-            }
+            });
         }));
         permanentCard.setExitAction(((game, card) -> {
             game.setCanRetrieveMedicalEquipment(false);
@@ -290,9 +294,9 @@ public class CardFactory {
         permanentCard = new PermanentCard("Pub", 2, 1, "Facility", (game, self) -> {
         });
         permanentCard.setPrepareAction((game, card) -> {
-            if (game.discard("Survivor")) {
+            game.discard("Survivor", () -> {
                 ((PermanentCard) card).setPrepared(true);
-            }
+            });
         });
         explorationDeck.add(permanentCard);
 
@@ -301,8 +305,14 @@ public class CardFactory {
             game.getPlayerArea().remove(self);
             game.getPlayerDiscard().add(self);
             Card cardSelected = game.getPlayerInteraction().selectCard(game.getExplorationArea());
+            if (cardSelected == null) {
+                return;
+            }
             game.getPlayerDiscard().add(cardSelected);
             cardSelected = game.getPlayerInteraction().selectCard(game.getExplorationArea());
+            if (cardSelected == null) {
+                return;
+            }
             game.getPlayerDiscard().add(cardSelected);
         });
         explorationDeck.add(permanentCard);
@@ -326,9 +336,9 @@ public class CardFactory {
         permanentCard = new PermanentCard("Tunnel", 1, 1, "Facility", (game, self) -> {
         });
         permanentCard.setPrepareAction(((game, card) -> {
-            if (game.discard("Safe House")) {
+            game.discard("Safe House", () -> {
                 ((PermanentCard) card).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -339,18 +349,15 @@ public class CardFactory {
             game.kill(6);
         });
         permanentCard.setPrepareAction((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
-
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 checkPreparedWeapons(game);
-
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Weapon Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
-
+            });
         });
         explorationDeck.add(permanentCard);
 
@@ -367,16 +374,15 @@ public class CardFactory {
             }
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 checkPreparedWeapons(game);
-
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Weapon Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -393,19 +399,16 @@ public class CardFactory {
             }
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 checkPreparedWeapons(game);
-
                 game.discardZombie(1);
-
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Weapon Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
-
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -422,15 +425,14 @@ public class CardFactory {
             }
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
-
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Weapon Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
@@ -440,36 +442,35 @@ public class CardFactory {
                 game.getPlayerInteraction().showMessage("Solo se puede usar una vez");
                 return;
             }
-            game.getPlayerInteraction().showMessage("Descarta una carta:");
-            Card cardSelected = game.getPlayerInteraction().selectCard(game.getPlayerHand());
-            game.getPlayerHand().remove(cardSelected);
-            game.getPlayerDiscard().add(cardSelected);
-            game.kill(1);
-            ((PermanentCard) self).setUsed(true);
-
-            for (Card card : game.getPlayerArea()) {
-                if (card.getName().equals("Sure Aim") && ((PermanentCard) card).isPrepared()) {
-                    game.kill(1);
+            game.discard(1, () -> {
+                game.kill(1);
+                ((PermanentCard) self).setUsed(true);
+                for (Card card : game.getPlayerArea()) {
+                    if (card.getName().equals("Sure Aim") && ((PermanentCard) card).isPrepared()) {
+                        game.kill(1);
+                    }
                 }
-            }
+            });
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 checkPreparedWeapons(game);
-
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Weapon Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         explorationDeck.add(permanentCard);
 
         // Minigun
         permanentCard = new ShootingCard("Minigun", 2, 0, "Shooting", true, true, (game, self) -> {
             Card ammo = ((ShootingCard) self).shoot();
+            if (ammo == null) {
+                return;
+            }
             game.getPlayerDiscard().add(ammo);
             game.kill(2);
 
@@ -524,6 +525,9 @@ public class CardFactory {
                 );
                 if (option == 1) {
                     Card ammo = ((ShootingCard) self).shoot();
+                    if (ammo == null) {
+                        return;
+                    }
                     game.getPlayerDiscard().add(ammo);
                 } else {
                     game.getPlayerArea().remove(self);
@@ -564,6 +568,9 @@ public class CardFactory {
                 return;
             }
             Card ammo = ((ShootingCard) self).shoot();
+            if (ammo == null) {
+                return;
+            }
             game.getPlayerDiscard().add(ammo);
 
             if (game.getZombieArea().isEmpty() && game.getZombiesInDiscard().isEmpty()) {
@@ -604,16 +611,15 @@ public class CardFactory {
 
         });
         permanentCard.setPrepareAction(((game, self) -> {
-            if (game.discard(((PermanentCard) self).getPrepareCost())) {
+            game.discard(((PermanentCard) self).getPrepareCost(), () -> {
                 checkPreparedWeapons(game);
-
                 for (Card card : game.getPlayerArea()) {
                     if (card.getName().equals("Weapon Skill") && ((PermanentCard) card).isPrepared()) {
                         game.kill(1);
                     }
                 }
                 ((PermanentCard) self).setPrepared(true);
-            }
+            });
         }));
         permanentCard.setEnterAction((game, card) -> {
             game.setRifleInPlay(true);
@@ -634,6 +640,9 @@ public class CardFactory {
                 );
                 if (option == 1) {
                     Card ammo = ((ShootingCard) self).shoot();
+                    if (ammo == null) {
+                        return;
+                    }
                     game.getPlayerDiscard().add(ammo);
                 } else {
                     game.destroy(self);
@@ -697,6 +706,9 @@ public class CardFactory {
         // Raid
         EventCard eventCard = new EventCard("Raid", 2, (game, self) -> {
             Card cardSelected = game.getPlayerInteraction().selectCard(game.getExplorationArea());
+            if (cardSelected == null) {
+                return;
+            }
             game.getPlayerDiscard().add(cardSelected);
             game.getExplorationArea().remove(cardSelected);
         });
@@ -705,13 +717,16 @@ public class CardFactory {
         // Run
         eventCard = new EventCard("Run", 1, (game, self) -> {
             Card cardSelected = game.getPlayerInteraction().selectCard(game.getZombieArea());
+            if (cardSelected == null) {
+                return;
+            }
             game.getZombieArea().remove(cardSelected);
             game.getPlayerDiscard().add(cardSelected);
         });
         explorationDeck.add(eventCard);
 
         // Safe house
-        eventCard = new EventCard("Safe house", 2, (game, self) -> {
+        eventCard = new EventCard("Safe House", 2, (game, self) -> {
             int totalRescued = 0;
             List<Card> cardsToRemove = new ArrayList<>();
             for (Card card : game.getPlayerArea()) {
@@ -839,7 +854,7 @@ public class CardFactory {
                     if (card.getName().equals("Survivor")
                         || card.getName().equals("Run")
                         || card.getName().equals("Raid")
-                        || card.getName().equals("Safe house")
+                        || card.getName().equals("Safe House")
                         || card.getName().equals("Machete")
                         || card.getName().equals("Dog")) {
                         playerDeck.push(card);
@@ -852,7 +867,7 @@ public class CardFactory {
                     if (card.getName().equals("Survivor")
                         || card.getName().equals("Run")
                         || card.getName().equals("Pistol")
-                        || card.getName().equals("Safe house")
+                        || card.getName().equals("Safe House")
                         || card.getName().equals("Weapon Skill")
                         || card.getName().equals("Scout")) {
                         playerDeck.push(card);
@@ -865,7 +880,7 @@ public class CardFactory {
                 int survivorCount = 0;
                 for (Card card : this.explorationDeck) {
                     if (card.getName().equals("Crowbar")
-                        || card.getName().equals("Safe house")
+                        || card.getName().equals("Safe House")
                         || card.getName().equals("Guide")
                         || card.getName().equals("Crossfire")
                         || card.getName().equals("Leather Jacket")
@@ -897,7 +912,7 @@ public class CardFactory {
                         || card.getName().equals("Blockbuster")
                         || card.getName().equals("Entrenchment")
                         || card.getName().equals("Pub")
-                        || card.getName().equals("Safe house")) {
+                        || card.getName().equals("Safe House")) {
                         playerDeck.push(card);
                     }
                 }

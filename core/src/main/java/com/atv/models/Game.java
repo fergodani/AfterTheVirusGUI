@@ -76,12 +76,6 @@ public class Game {
             }
         }
 
-        // Remove
-        for (Card card : this.explorationDeck) {
-            if (card.getName().equals("Rifle")) {
-                this.playerHand.add(card);
-            }
-        }
     }
 
     public void playCard() {
@@ -118,9 +112,10 @@ public class Game {
             this.playerInteraction.showMessage("No hay cartas en el mazo de exploración.");
             return;
         }
-        discard(1);
-        Card card = this.explorationDeck.pop();
-        this.explorationArea.add(card);
+        discard(1, () -> {
+            Card card = this.explorationDeck.pop();
+            this.explorationArea.add(card);
+        });
     }
 
     public void retrieve() {
@@ -132,11 +127,10 @@ public class Game {
         if (card == null) {
             return;
         }
-        if (discard(card.getExplorationCost())) {
+        discard(card.getExplorationCost(), () -> {
             this.explorationArea.remove(card);
             this.playerDiscard.add(card);
-
-        }
+        });
     }
 
     public void prepareCard() {
@@ -185,17 +179,17 @@ public class Game {
             } else if (isArmsDamaged() && !isLegsDamaged()) {
                 this.setLegsDamaged(true);
             } else {
-                int option = this.playerInteraction.selectOption("¿Dónde quieres recibir el daño?\n1. Brazos\n2. Piernas", 2);
-                switch (option) {
-                    case 1:
+                this.playerInteraction.selectDamage(
+                    () -> {
                         this.setArmsDamaged(true);
-                        break;
-                    case 2:
+                        nextRound();
+                    },
+                    () -> {
                         this.setLegsDamaged(true);
-                        break;
-                    default:
-                        this.playerInteraction.showMessage("Opción no válida.");
-                }
+                        nextRound();
+                    }
+                );
+                return;
             }
         }
         nextRound();
@@ -249,6 +243,28 @@ public class Game {
         return true;
     }
 
+    public void discard(int quantity, Runnable onDiscarded) {
+        if (quantity == 0) {
+            onDiscarded.run();
+            return;
+        }
+        if (this.playerHand.size() < quantity) {
+            this.playerInteraction.showMessage("No tienes suficientes cartas.");
+            return;
+        }
+        this.playerInteraction.selectCards(this.playerHand, quantity, selectedCards -> {
+            if (selectedCards.size() != quantity
+                || new HashSet<>(selectedCards).size() != quantity
+                || !this.playerHand.containsAll(selectedCards)) {
+                this.playerInteraction.showMessage("La selección de descarte no es válida.");
+                return;
+            }
+            this.playerHand.removeAll(selectedCards);
+            this.playerDiscard.addAll(selectedCards);
+            onDiscarded.run();
+        });
+    }
+
     public boolean discard(String cardName) {
         Card card = this.playerHand.stream()
             .filter(c -> c.getName().equals(cardName))
@@ -261,6 +277,22 @@ public class Game {
         }
         this.playerInteraction.showMessage("No tienes la carta " + cardName + " en la mano.");
         return false;
+    }
+
+    public void discard(String cardName, Runnable onDiscarded) {
+        List<Card> matchingCards = this.playerHand.stream()
+            .filter(card -> card.getName().equals(cardName))
+            .collect(Collectors.toList());
+        if (matchingCards.isEmpty()) {
+            this.playerInteraction.showMessage("No tienes la carta " + cardName + " en la mano.");
+            return;
+        }
+        this.playerInteraction.selectCards(matchingCards, 1, selectedCards -> {
+            Card selectedCard = selectedCards.get(0);
+            this.playerHand.remove(selectedCard);
+            this.playerDiscard.add(selectedCard);
+            onDiscarded.run();
+        });
     }
 
     public void kill(ZombieCard card) {
